@@ -19,13 +19,13 @@ def booking_dates():
     checkout_date = checkin_date + timedelta(days=5)
 
     return {
-        "chekin": checkin_date.strftime('%Y-%m-%d'),
-        "cheсkout": checkout_date.strftime('%Y-%m-%d')
+        "checkin": checkin_date.strftime('%Y-%m-%d'),
+        "checkout": checkout_date.strftime('%Y-%m-%d')
     }
 
 
 @pytest.fixture
-def generate_random_booking_date(booking_dates):
+def generate_random_booking_data(booking_dates):
     faker = Faker()
     firstname = faker.first_name()
     lastname = faker.last_name()
