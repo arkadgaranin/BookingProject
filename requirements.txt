@@ -1,5 +1,5 @@
-allure-pytest==2.15.3
-allure-python-commons==2.15.3
+allure-pytest==2.16.0
+allure-python-commons==2.16.0
 attrs==25.4.0
 certifi==2026.1.4
 charset-normalizer==3.4.4
@@ -11,8 +11,8 @@ jsonschema-specifications==2025.9.1
 packaging==26.0
 pluggy==1.6.0
 Pygments==2.19.2
-pytest==9.0.2
+pytest==9.1.1
 referencing==0.37.0
-requests==2.32.5
+requests==2.34.2
 rpds-py==0.30.0
 urllib3==2.6.3
