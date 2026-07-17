@@ -21,10 +21,8 @@ class APIClient:
 
         self.base_url = self.get_base_url(environment)
         self.session = requests.Session()
-        self.session.headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
+        self.session.headers = {'Content-Type': 'application/json',
+                                'Accept': 'application/json'}
 
     def get_base_url(self, environment: Environment) -> str:
         if environment == Environment.TEST:
@@ -110,7 +108,8 @@ class APIClient:
     def update_booking(self, booking_id, booking_data):
         with allure.step('Update booking'):
             url = f"{self.base_url}{Endpoints.BOOKING_ENDPOINT.value}/{booking_id}"
-            response = self.session.put(url, auth=HTTPBasicAuth(Users.USERNAME.value, Users.PASSWORD.value), json=booking_data)
+            response = self.session.put(url, auth=HTTPBasicAuth(Users.USERNAME.value, Users.PASSWORD.value),
+                                        json=booking_data)
             response.raise_for_status()
         with allure.step('Assert status code'):
             assert response.status_code == 200, f"Expected status 200 but got {response.status_code}"
@@ -119,7 +118,8 @@ class APIClient:
     def partial_update_booking(self, booking_id, booking_data):
         with allure.step('Partial update booking'):
             url = f"{self.base_url}{Endpoints.BOOKING_ENDPOINT.value}/{booking_id}"
-            response = self.session.patch(url, auth=HTTPBasicAuth(Users.USERNAME.value, Users.PASSWORD.value), json=booking_data)
+            response = self.session.patch(url, auth=HTTPBasicAuth(Users.USERNAME.value, Users.PASSWORD.value),
+                                          json=booking_data)
             response.raise_for_status()
         with allure.step('Assert status code'):
             assert response.status_code == 200, f"Expected status 200 but got {response.status_code}"
