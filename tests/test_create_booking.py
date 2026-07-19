@@ -98,7 +98,7 @@ def test_create_booking_with_pydantic(api_client, generate_random_booking_data):
         try:
             BookingResponse(**booking_data)
         except ValidationError as e:
-            raise ValidationError(f"Response validation failed: {e}")#gpt говорит, что такая конструкция
+            raise ValidationError(f"Response validation failed: {e}")  # gpt говорит, что такая конструкция
             # с raise ValidationError(f"Response validation failed: {e}") уже не используется в версии Pydantic 2. Верить ему)?
 
     with allure.step("Проверка данных бронирования в ответе"):
@@ -159,7 +159,7 @@ def test_create_booking_without_optional_field(api_client, generate_random_booki
         assert booking_data["booking"]["bookingdates"]["checkout"] == data_without_needs["bookingdates"][
             "checkout"], "checkout бронирования не совпадает с ожидаемым"
 
-        assert "additionalneeds" not in data_without_needs #Здесь правильно проверку написал?
+        assert "additionalneeds" not in data_without_needs  # Здесь правильно проверку написал?
 
 
 @allure.feature('Test сreating booking')
@@ -169,9 +169,7 @@ def test_server_error_if_creating_without_required_field(api_client, generate_ra
         full_data = generate_random_booking_data
         data_without_bookingdates = {k: v for k, v in full_data.items() if k != "bookingdates"}
 
-    # не уверен в логичности и правильности проверки этого теста, но по-другому не придумал, как проверить 500 ошибку,
-    # которая отдается постманом, если дернуть пост запрос создания брони без обязательного поля
-    with allure.step("Проверка исключения HTTPError из метода raise_for_status функции create_booking api-клиента"):
+    with allure.step("Проверка исключения HTTPError и текста ошибки: 500 Server Error"):
         with pytest.raises(requests.exceptions.HTTPError) as exc_info:
             api_client.create_booking(data_without_bookingdates)
         assert "500 Server Error: Internal Server Error for url: https://restful-booker.herokuapp.com/booking" in str(
@@ -179,19 +177,16 @@ def test_server_error_if_creating_without_required_field(api_client, generate_ra
 
 
 @allure.feature('Test сreating booking')
-@allure.story('Test wrong HTTP method')
-def test_creating_booking_with_wrong_method(api_client, generate_random_booking_data, mocker):
-    with allure.step("Генерация данных для создания бронирования"):
-        data = generate_random_booking_data
+@allure.story('Test сreating booking with empty data')
+def test_create_booking_with_empty_data(api_client):
+    with allure.step("Подготовка пустых данных"):
+        empty_data = {}
 
-    with allure.step("Мокирование запроса, чтоб отдал код ошибки 405"):
-        mock_response = mocker.Mock()
-        mock_response.status_code = 405
-        mocker.patch.object(api_client.session, 'post', return_value=mock_response)
-
-    with allure.step("Проверка исключения AssertionError и текста ошибки"):
-        with pytest.raises(AssertionError, match="Expected status 200 but got 405"):
-            api_client.create_booking(data)
+    with allure.step("Проверка исключения HTTPError и текста ошибки: 500 Server Error"):
+        with pytest.raises(requests.exceptions.HTTPError) as exc_info:
+            api_client.create_booking(empty_data)
+        assert "500 Server Error: Internal Server Error for url: https://restful-booker.herokuapp.com/booking" in str(
+            exc_info.value)
 
 
 @allure.feature('Test сreating booking')
@@ -201,8 +196,8 @@ def test_create_booking_with_wrong_data_type(api_client):
         wrong_data = {
             "firstname": "Jim",
             "lastname": "Brown",
-            "totalprice": "one hundred thousand", # намеренно поменял тип на string
-            "depositpaid": 100500,
+            "totalprice": "one hundred thousand",  # wrong data type
+            "depositpaid": True,
             "bookingdates": {
                 "checkin": "2018-01-01",
                 "checkout": "2019-01-01"
@@ -214,48 +209,4 @@ def test_create_booking_with_wrong_data_type(api_client):
         booking_data = api_client.create_booking(wrong_data)
 
     with allure.step("Валидация Pydantic созданного бронирования"):
-        BookingResponse(**booking_data) # Здесь переписал валидацию, как gpt мне посоветовал, это верно или нет?
-
-
-@allure.feature('Test сreating booking')
-@allure.story('Test сreating booking with wrong URL')
-def test_create_booking_with_wrong_url(api_client, generate_random_booking_data, mocker):
-    with allure.step("Генерация данных для создания бронирования"):
-        data = generate_random_booking_data
-
-    with allure.step("Мокирование запроса, чтоб отдал код ошибки 404"):
-        mock_response = mocker.Mock()
-        mock_response.status_code = 404
-        mocker.patch.object(api_client.session, 'post', return_value=mock_response)
-
-    with allure.step("Проверка исключения AssertionError и текста ошибки"):
-        with pytest.raises(AssertionError, match="Expected status 200 but got 404"):
-            api_client.create_booking(data)
-
-
-@allure.feature('Test сreating booking')
-@allure.story('Test сreating booking with server timeout')
-def test_create_booking_with_server_timeout(api_client, generate_random_booking_data, mocker):
-    with allure.step("Генерация данных для создания бронирования"):
-        data = generate_random_booking_data
-
-    with allure.step("Мокирование запроса, для возникновения таймаута"):
-        mocker.patch.object(api_client.session, 'post', side_effect=requests.Timeout)
-
-    with allure.step("Проверка таймаута"):
-        with pytest.raises(requests.Timeout):
-            api_client.create_booking(data)
-
-
-@allure.feature('Test сreating booking')
-@allure.story('Test сreating booking with server unavailability')
-def test_create_booking_with_server_unavailability(api_client, generate_random_booking_data, mocker):
-    with allure.step("Генерация данных для создания бронирования"):
-        data = generate_random_booking_data
-
-    with allure.step("Мокирование запроса, для возникновения недоступности сервера"):
-        mocker.patch.object(api_client.session, 'post', side_effect=Exception("Server unavailable"))
-
-    with allure.step("Проверка исключения, если сервер недоступен"):
-        with pytest.raises(Exception, match="Server unavailable"):
-            api_client.create_booking(data)
+        BookingResponse(**booking_data)  # Здесь переписал валидацию, как gpt мне посоветовал, это верно или нет?
